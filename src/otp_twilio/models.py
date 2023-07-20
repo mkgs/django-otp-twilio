@@ -78,8 +78,9 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
         self._validate_config()
 
         url = '{0}/2010-04-01/Accounts/{1}/Messages.json'.format(settings.OTP_TWILIO_URL, settings.OTP_TWILIO_ACCOUNT)
+        from_number = settings.OTP_TWILIO_FROM_UK if self.number.startswith("+44") else settings.OTP_TWILIO_FROM
         data = {
-            'From': settings.OTP_TWILIO_FROM,
+            'From': from_number,
             'To': self.number,
             'Body': str(token),
         }
