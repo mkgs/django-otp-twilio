@@ -73,8 +73,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
 
         return challenge
 
-    def _deliver_token(self, token):
-        self._validate_config()
+    def _deliver_twilio_sms_message(self, token):
 
         url = '{0}/2010-04-01/Accounts/{1}/Messages.json'.format(
             settings.OTP_TWILIO_URL, settings.OTP_TWILIO_ACCOUNT
@@ -104,6 +103,42 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                 settings.OTP_TWILIO_AUTH,
             ),
         )
+
+        return response
+
+    def _deliver_twilio_verify_message(self, token):
+
+        url = 'https://verify.twilio.com/v2/Services/{0}/Verifications'.format(
+            settings.OTP_TWILIO_VERIFY_SERVICE_SID
+        )
+        data = {
+            'To': self.number,
+            'CustomCode': token,
+            'Channel': 'sms'
+        }
+
+        response = requests.post(
+            url,
+            data=data,
+            auth=(
+                (
+                    settings.OTP_TWILIO_API_KEY
+                    if settings.OTP_TWILIO_API_KEY
+                    else settings.OTP_TWILIO_ACCOUNT
+                ),
+                settings.OTP_TWILIO_AUTH,
+            ),
+        )
+
+        return response
+
+    def _deliver_token(self, token):
+        self._validate_config()
+
+        if settings.OTP_TWILIO_VERIFY_SERVICE_SID:
+            response = self._deliver_twilio_verify_message(token)
+        else:
+            response = self._deliver_twilio_sms_message(token)
 
         try:
             response.raise_for_status()

@@ -103,6 +103,18 @@ The phone number to send SMS messages from. This must be one of your Twilio
 numbers.
 
 
+.. setting:: OTP_TWILIO_VERIFY_SERVICE_SID
+
+**OTP_TWILIO_VERIFY_SERVICE_SID**
+
+Default: ``None``
+
+The Twilio Verify service SID to send SMS messages from. This must be one of
+your Twilio Verify services. The service must be configured to allow custom
+codes. If supplied, this takes precedence over ``OTP_TWILIO_FROM`` or
+``OTP_TWILIO_MESSAGING_SERVICE_SID``.
+
+
 .. setting:: OTP_TWILIO_MESSAGING_SERVICE_SID
 
 **OTP_TWILIO_MESSAGING_SERVICE_SID**
