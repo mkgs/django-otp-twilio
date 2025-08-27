@@ -136,7 +136,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
         self._validate_config()
 
         if settings.OTP_TWILIO_VERIFY_SERVICE_SID:
-            response = self._deliver_twilio_verify_message(token)
+            response = self._deliver_twilio_verify_message(self.token)
         else:
             response = self._deliver_twilio_sms_message(token)
 
