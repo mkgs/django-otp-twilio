@@ -45,6 +45,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
     number = models.CharField(
         max_length=30, help_text="The mobile number to deliver tokens to (E.164)."
     )
+    verification_sid = models.CharField(max_length=34, null=True)
 
     class Meta(SideChannelDevice.Meta):
         verbose_name = "Twilio SMS Device"
@@ -104,6 +105,10 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
             ),
         )
 
+        if self.verification_sid:
+            self.verification_sid = None
+            self.save(update_fields=("verification_sid",))
+
         return response
 
     def _deliver_twilio_verify_message(self, token):
@@ -129,6 +134,10 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                 settings.OTP_TWILIO_AUTH,
             ),
         )
+
+        verification_sid = response.json()["sid"]
+        self.verification_sid = verification_sid
+        self.save(update_fields=("verification_sid", ))
 
         return response
 
@@ -169,6 +178,32 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
 
             if verified:
                 self.throttle_reset()
+
+                # If there is a verification SID, inform Twilio that the verification succeeded
+                if self.verification_sid:
+                    url = 'https://verify.twilio.com/v2/Services/{0}/Verifications/{1}'.format(
+                        settings.OTP_TWILIO_VERIFY_SERVICE_SID, self.verification_sid
+                    )
+                    data = {
+                        'Status': "approved"
+                    }
+
+                    try:
+                        response = requests.post(
+                            url,
+                            data=data,
+                            auth=(
+                                (
+                                    settings.OTP_TWILIO_API_KEY
+                                    if settings.OTP_TWILIO_API_KEY
+                                    else settings.OTP_TWILIO_ACCOUNT
+                                ),
+                                settings.OTP_TWILIO_AUTH,
+                            ),
+                        )
+                    except:
+                        logger.warning(f"Failed to update Twilio verification status for {self.verification_sid}")
+
             else:
                 self.throttle_increment()
         else:
