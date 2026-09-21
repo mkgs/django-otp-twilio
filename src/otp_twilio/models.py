@@ -134,6 +134,16 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                 settings.OTP_TWILIO_AUTH,
             ),
         )
+        try:
+            response.raise_for_status()
+        except Exception as e:
+            logger.exception('Error sending token by Twilio SMS: {0}'.format(e))
+            raise
+        
+        if 'sid' not in response.json():
+            message = response.json().get('message')
+            logger.error('Error sending token by Twilio SMS: {0}'.format(message))
+            raise Exception(message)
 
         verification_sid = response.json()["sid"]
         self.verification_sid = verification_sid

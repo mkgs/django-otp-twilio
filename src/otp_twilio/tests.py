@@ -2,6 +2,7 @@ from unittest import mock
 
 from django_otp.tests import TestCase, ThrottlingTestMixin
 from freezegun import freeze_time
+import requests
 
 from django.db import IntegrityError
 from django.test.utils import override_settings
@@ -93,6 +94,31 @@ class TestTwilioSMS(TwilioDeviceMixin, TestCase):
 
     def _deliver_token(self, token):
         self._delivered = token
+
+
+@override_settings(
+    OTP_TWILIO_VERIFY_SERVICE_SID='VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+)
+class TestTwilioVerifyDeliver(TwilioDeviceMixin, TestCase):
+    def test_raise_for_status_error_is_reraised(self):
+        """If Twilio returns an error status, that exception should propagate."""
+        response = mock.Mock()
+        response.raise_for_status.side_effect = requests.HTTPError('boom')
+
+        with mock.patch('otp_twilio.models.requests.post', return_value=response):
+            with self.assertRaises(requests.HTTPError):
+                self.device._deliver_twilio_verify_message('123456')
+
+    def test_sid_is_read_without_keyerror(self):
+        """A successful response's 'sid' should be stored without a KeyError."""
+        response = mock.Mock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {'sid': 'VExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'}
+
+        with mock.patch('otp_twilio.models.requests.post', return_value=response):
+            self.device._deliver_twilio_verify_message('123456')
+
+        self.assertEqual(self.device.verification_sid, 'VExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
 
 
 @override_settings(
