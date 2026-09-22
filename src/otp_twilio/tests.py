@@ -118,7 +118,9 @@ class TestTwilioVerifyDeliver(TwilioDeviceMixin, TestCase):
         with mock.patch('otp_twilio.models.requests.post', return_value=response):
             self.device._deliver_twilio_verify_message('123456')
 
-        self.assertEqual(self.device.verification_sid, 'VExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')
+        self.assertEqual(
+            self.device.verification_sid, 'VExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        )
 
 
 @override_settings(

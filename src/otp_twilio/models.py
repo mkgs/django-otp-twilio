@@ -116,11 +116,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
         url = 'https://verify.twilio.com/v2/Services/{0}/Verifications'.format(
             settings.OTP_TWILIO_VERIFY_SERVICE_SID
         )
-        data = {
-            'To': self.number,
-            'CustomCode': token,
-            'Channel': 'sms'
-        }
+        data = {'To': self.number, 'CustomCode': token, 'Channel': 'sms'}
 
         response = requests.post(
             url,
@@ -147,7 +143,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
 
         verification_sid = response.json()["sid"]
         self.verification_sid = verification_sid
-        self.save(update_fields=("verification_sid", ))
+        self.save(update_fields=("verification_sid",))
 
         return response
 
@@ -194,9 +190,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                     url = 'https://verify.twilio.com/v2/Services/{0}/Verifications/{1}'.format(
                         settings.OTP_TWILIO_VERIFY_SERVICE_SID, self.verification_sid
                     )
-                    data = {
-                        'Status': "approved"
-                    }
+                    data = {'Status': "approved"}
 
                     try:
                         requests.post(
@@ -212,7 +206,9 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                             ),
                         )
                     except Exception as e:
-                        logger.warning(f"Failed to update Twilio verification status for {self.verification_sid}: {e}")
+                        logger.warning(
+                            f"Failed to update Twilio verification status for {self.verification_sid}: {e}"
+                        )
 
             else:
                 self.throttle_increment()
