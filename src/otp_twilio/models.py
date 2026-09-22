@@ -139,7 +139,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
         except Exception as e:
             logger.exception('Error sending token by Twilio SMS: {0}'.format(e))
             raise
-        
+
         if 'sid' not in response.json():
             message = response.json().get('message')
             logger.error('Error sending token by Twilio SMS: {0}'.format(message))
@@ -199,7 +199,7 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                     }
 
                     try:
-                        response = requests.post(
+                        requests.post(
                             url,
                             data=data,
                             auth=(
@@ -211,8 +211,8 @@ class TwilioSMSDevice(ThrottlingMixin, SideChannelDevice):
                                 settings.OTP_TWILIO_AUTH,
                             ),
                         )
-                    except:
-                        logger.warning(f"Failed to update Twilio verification status for {self.verification_sid}")
+                    except Exception as e:
+                        logger.warning(f"Failed to update Twilio verification status for {self.verification_sid}: {e}")
 
             else:
                 self.throttle_increment()
